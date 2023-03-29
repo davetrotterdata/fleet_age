@@ -1,0 +1,33 @@
+SELECT origin, dest, op_carrier, airline, aircraft_used, segments, avg_age, total_air_minutes, total_miles, passenger_capacity, sub2.name AS origin_name, sub2.latitude_deg AS origin_lat, sub2.longitude_deg AS origin_long, cord.name AS destination_name,cord.latitude_deg AS dest_lat, cord.longitude_deg AS dest_long
+FROM(SELECT origin, dest, op_carrier,
+	CASE WHEN op_carrier = 'DL' THEN 'Delta Airlines' 
+			WHEN op_carrier = 'AS' THEN 'Alaska Airlines' 
+			WHEN op_carrier = 'MQ' THEN 'Envoy Airlines'
+			WHEN op_carrier = 'B6' THEN 'JetBlue Airlines'
+			WHEN op_carrier = 'F9' THEN 'Frontier Airlines'
+			WHEN op_carrier = 'UA' THEN 'United Airlines'
+			WHEN op_carrier = 'AA' THEN 'American Airlines'
+			WHEN op_carrier = 'OO' THEN 'SkyWest Airlines'
+			WHEN op_carrier = 'HA' THEN 'Hawaiian Airlines'
+			WHEN op_carrier = 'YV' THEN 'Mesa Airlines'
+			WHEN op_carrier = '9E' THEN 'Endeavor Airlines'
+			WHEN op_carrier = 'OH' THEN 'PSA Airlines'
+			WHEN op_carrier = 'NK' THEN 'Spirit Airlines'
+			WHEN op_carrier = 'WN' THEN 'Southwest Airlines'
+			WHEN op_carrier = 'QX' THEN 'Horizon Airlines'
+			WHEN op_carrier = 'G4' THEN 'Allegiant Airlines'
+			WHEN op_carrier = 'YX' THEN 'Republic Airlines'					
+			END AS airline, 
+			COUNT(DISTINCT nnumber) AS aircraft_used, COUNT(nnumber) AS segments, 2023-AVG(yearmade) AS avg_age, SUM(airtime) AS total_air_minutes, SUM(miles_flown) AS total_miles, SUM(total_seats) as passenger_capacity,
+			longitude_deg, latitude_deg, name
+FROM(SELECT *, CAST(f.air_time AS FLOAT) AS airtime, CAST(f.distance AS FLOAT) AS miles_flown, CAST(type.seats AS INTEGER) as total_seats
+FROM flights2021 f
+JOIN aircraftowner own
+ON own.nnumber = f.tail_num
+JOIN aircrafttype type
+ON type.code = own.model_number_type
+JOIN airportcord cord
+ON f.origin = cord.local_code) sub1
+GROUP BY origin, dest, op_carrier, longitude_deg, latitude_deg,name) sub2
+JOIN airportcord cord
+ON cord.local_code = dest
